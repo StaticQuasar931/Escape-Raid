@@ -189,6 +189,13 @@
       pointer-events: none !important;
       opacity: 0 !important;
     }
+
+    .codex-hidden-lock-text {
+      color: transparent !important;
+      text-shadow: none !important;
+      background: transparent !important;
+      border-color: transparent !important;
+    }
   </style>
 </head>
 <body>
@@ -461,10 +468,18 @@
       }
 
       function hideOverlayNode(node) {
-        if (!node || !node.classList) {
+        if (!(node instanceof HTMLElement)) {
           return;
         }
         node.classList.add("codex-hidden-lock-overlay");
+        node.setAttribute("aria-hidden", "true");
+      }
+
+      function hideLockTextNode(node) {
+        if (!(node instanceof HTMLElement)) {
+          return;
+        }
+        node.classList.add("codex-hidden-lock-text");
         node.setAttribute("aria-hidden", "true");
       }
 
@@ -527,14 +542,19 @@
             continue;
           }
           if (looksLikeLockCopy(text)) {
-            if (isLargeOverlayElement(node)) {
-              hideOverlayNode(node);
-            }
-            if (node.parentElement && isLargeOverlayElement(node.parentElement)) {
-              hideOverlayNode(node.parentElement);
-            }
-            if (node.parentElement && node.parentElement.parentElement && isLargeOverlayElement(node.parentElement.parentElement)) {
-              hideOverlayNode(node.parentElement.parentElement);
+            hideLockTextNode(node);
+
+            let current = node;
+            let depth = 0;
+            while (current && depth < 6) {
+              if (current instanceof HTMLElement) {
+                if (depth === 0 || isLargeOverlayElement(current)) {
+                  hideOverlayNode(current);
+                }
+                hideLockTextNode(current);
+              }
+              current = current.parentElement;
+              depth += 1;
             }
           }
         }
@@ -550,6 +570,7 @@
           subtree: true,
           characterData: true
         });
+        window.setInterval(removeLockOverlay, 200);
       }
 
       function requestFullscreen(event) {
