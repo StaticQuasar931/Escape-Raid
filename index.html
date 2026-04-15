@@ -204,6 +204,7 @@
     <div id="unity-error" hidden></div>
   </div>
 
+  <script src="gmsoftsdk_v5.js"></script>
   <script>
     (function() {
       const productVersion = "25091906";
@@ -212,7 +213,6 @@
       const localDataUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb";
       const remoteDataUrl = remoteBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb";
       const loaderUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".loader.js";
-      const gamesdkUrlPattern = /api\.cdnwave\.com\/sdkdom\/gamesdk/i;
       const signedDomainToken = "eyJzaWduZWQiOiJJaHQ2XC9qdTRUWk15dTljNUhNbWNmekM2QWFmdXFIbGlqOFNcL1ZNNGJxOFVERXZ2czBwc3gwZUZQNEdWSkVWNmVFU2FMaGV1UERNMnEwOVVhUFRLODFJbVpVYnBpTndMXC9wNENcL2R2RWRkanlQK1RyUFFqazNLOUxOM0ZNRDluN0hSXC9ZblAxRmJYTkxoOG0zY3ZLT1JjaWdyXC9Na1JJQnV4SndQaWlvTlFMTVVPbkIzUmZUUkV1czBXbThJK3l4WEdzWUttSVhrT1lGT2hMXC8xb29NNG1hYWswMHZCaFwvZ2J1T09DRDBmZE82K2k3WVFuQUpvQUlBVTNtVXZUc0g4bWN3XC9qUmtTc3E5a2hWdktWVStnem4rZndveVpKWDFWTE00alwvUzZWdVF5SGJoSWEzM0d6U2hjUDZYQXpUUTBIOWpsc2pzNU83aEx4alVkUlcrSDFsZW9RPT0iLCJhcCI6InllcyIsImhuIjoiZ2FtZS5hemdhbWUuaW8iLCJkb21haW4iOiJhemdhbWUuaW8iLCJzIjoieWVzIiwic3R5cGUiOjJ9";
 
       function encodeBase64(value) {
@@ -225,23 +225,6 @@
         } catch (error) {
           return null;
         }
-      }
-
-      function isGamesdkUrl(url) {
-        return typeof url === "string" && gamesdkUrlPattern.test(url);
-      }
-
-      function makeGamesdkResponseBody() {
-        return JSON.stringify(unlockedGameInfoResponse);
-      }
-
-      function createGamesdkResponse() {
-        return new Response(makeGamesdkResponseBody(), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
       }
 
       const signedDomainData = decodeBase64Json(signedDomainToken) || {};
@@ -373,154 +356,12 @@
         }
       };
 
-      try {
-        localStorage.setItem("gmsdksigndomain", signedDomainToken);
-        localStorage.setItem("gm_game_info", makeGamesdkResponseBody());
-        localStorage.setItem("gameInfoResponse", makeGamesdkResponseBody());
-        localStorage.setItem("gm_game_info_param", unityGameInfoParam);
-        localStorage.setItem("gm_ad_info_param", unityAdInfoParam);
-      } catch (error) {}
-
-      window.GMSOFT_SDKTYPE = "gm";
-      window.sdkType = "gm";
-      window.GMSOFT_SIGNED = signedDomainToken;
-      window.GMSOFT_GAME_INFO = {
-        sdktype: "gm",
-        more_games_url: "",
-        promotion: []
-      };
-      window.GMSOFT_ADS_INFO = {
-        enable: "no",
-        sdk_type: "gm",
-        time_show_inter: 0,
-        time_show_reward: 0,
-        reward: "no",
-        enable_reward: "no",
-        enable_interstitial: "no",
-        enable_preroll: "no"
-      };
-
-      function firebaseLogEvent() {}
-      function firebaseLogEventParameter() {}
-      function firebaseSetUserProperties() {}
-      function gmEvent() {}
-      function gmStartGame(callbackFunction) {
-        if (typeof callbackFunction === "function") {
-          callbackFunction();
-        }
-      }
-      function gmStartAds(callbackFunction) {
-        if (typeof callbackFunction === "function") {
-          callbackFunction();
-        }
-      }
-      function SetSDKType() {}
-
-      window.firebaseLogEvent = window.firebaseLogEvent || firebaseLogEvent;
-      window.firebaseLogEventParameter = window.firebaseLogEventParameter || firebaseLogEventParameter;
-      window.firebaseSetUserProperties = window.firebaseSetUserProperties || firebaseSetUserProperties;
-      window.gmEvent = window.gmEvent || gmEvent;
-      window.gmStartGame = window.gmStartGame || gmStartGame;
-      window.gmStartAds = window.gmStartAds || gmStartAds;
-      window.SetSDKType = window.SetSDKType || SetSDKType;
-      window.GMGameSDK = window.GMGameSDK || {
-        init: function() {
-          return {
-            setVersion: function() {
-              return this;
-            }
-          };
-        },
-        trackEvent: function() {},
-        trackEventParams: function() {}
-      };
-      window.GMSDK = window.GMSDK || {};
-      window.GMSDK.SetSDKType = window.GMSDK.SetSDKType || SetSDKType;
-      window.GMSDK.SetGameInfoParam = window.GMSDK.SetGameInfoParam || function() {
-        return unityGameInfoParam;
-      };
-      window.GMAdvertisementManager = window.GMAdvertisementManager || {};
-      window.GMAdvertisementManager.SetAdParam = window.GMAdvertisementManager.SetAdParam || function() {
-        return unityAdInfoParam;
-      };
-      window.GMAnalytics = window.GMAnalytics || {
-        LogEvent: function() {}
-      };
-
-      const nativeFetch = window.fetch ? window.fetch.bind(window) : null;
-      if (nativeFetch) {
-        window.fetch = function(resource, init) {
-          const url = typeof resource === "string" ? resource : resource && resource.url;
-          if (isGamesdkUrl(url)) {
-            return Promise.resolve(createGamesdkResponse());
-          }
-          return nativeFetch(resource, init);
-        };
-      }
-
-      (function() {
-        const nativeOpen = XMLHttpRequest.prototype.open;
-        const nativeSend = XMLHttpRequest.prototype.send;
-        const nativeSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-        const nativeGetResponseHeader = XMLHttpRequest.prototype.getResponseHeader;
-        const nativeGetAllResponseHeaders = XMLHttpRequest.prototype.getAllResponseHeaders;
-
-        XMLHttpRequest.prototype.open = function(method, url) {
-          this.__codexGamesdkUrl = typeof url === "string" ? url : "";
-          this.__codexGamesdkIntercept = isGamesdkUrl(this.__codexGamesdkUrl);
-          if (!this.__codexGamesdkIntercept) {
-            return nativeOpen.apply(this, arguments);
-          }
-          this.readyState = 1;
-          if (typeof this.onreadystatechange === "function") {
-            this.onreadystatechange();
-          }
-        };
-
-        XMLHttpRequest.prototype.setRequestHeader = function(name, value) {
-          if (this.__codexGamesdkIntercept) {
-            return;
-          }
-          return nativeSetRequestHeader.call(this, name, value);
-        };
-
-        XMLHttpRequest.prototype.send = function() {
-          if (!this.__codexGamesdkIntercept) {
-            return nativeSend.apply(this, arguments);
-          }
-
-          const payload = makeGamesdkResponseBody();
-          Object.defineProperty(this, "readyState", { configurable: true, value: 4 });
-          Object.defineProperty(this, "status", { configurable: true, value: 200 });
-          Object.defineProperty(this, "statusText", { configurable: true, value: "OK" });
-          Object.defineProperty(this, "responseText", { configurable: true, value: payload });
-          Object.defineProperty(this, "response", { configurable: true, value: payload });
-
-          if (typeof this.onreadystatechange === "function") {
-            this.onreadystatechange();
-          }
-          if (typeof this.onload === "function") {
-            this.onload();
-          }
-          if (typeof this.onloadend === "function") {
-            this.onloadend();
-          }
-        };
-
-        XMLHttpRequest.prototype.getResponseHeader = function(name) {
-          if (this.__codexGamesdkIntercept) {
-            return name && name.toLowerCase() === "content-type" ? "application/json" : null;
-          }
-          return nativeGetResponseHeader.call(this, name);
-        };
-
-        XMLHttpRequest.prototype.getAllResponseHeaders = function() {
-          if (this.__codexGamesdkIntercept) {
-            return "content-type: application/json\r\n";
-          }
-          return nativeGetAllResponseHeaders.call(this);
-        };
-      })();
+      window.__gmsoftEscapeRaid.init({
+        signedDomainToken: signedDomainToken,
+        gameInfoParam: unityGameInfoParam,
+        adInfoParam: unityAdInfoParam,
+        responseBody: unlockedGameInfoResponse
+      });
 
       const config = {
         dataUrl: remoteDataUrl,
@@ -659,35 +500,6 @@
         window.addEventListener("touchstart", activate, { passive: true });
       }
 
-      function feedUnitySdkParameters() {
-        const instance = window.unityInstance;
-        if (!instance || typeof instance.SendMessage !== "function") {
-          return false;
-        }
-
-        const calls = [
-          ["GMSDK", "SetGameInfoParam", unityGameInfoParam],
-          ["GMAdvertisementManager", "SetAdParam", unityAdInfoParam]
-        ];
-
-        let sent = false;
-        calls.forEach(function(entry) {
-          try {
-            instance.SendMessage(entry[0], entry[1], entry[2]);
-            sent = true;
-          } catch (error) {}
-        });
-        return sent;
-      }
-
-      function scheduleUnitySdkFeed() {
-        [0, 150, 400, 900, 1600, 2600, 4000].forEach(function(delay) {
-          setTimeout(function() {
-            feedUnitySdkParameters();
-          }, delay);
-        });
-      }
-
       async function bootGame() {
         loadingText.textContent = "Checking local files...";
         const missing = await verifyLocalFiles();
@@ -715,7 +527,7 @@
             loadingBar.style.display = "none";
             canvas.focus();
             installInteractionHandlers();
-            scheduleUnitySdkFeed();
+            document.dispatchEvent(new CustomEvent("gmsoftSdkReady"));
           }).catch(function(message) {
             setFatalError(typeof message === "string" ? message : "Unity failed to start. Check the browser console for details.");
           });
