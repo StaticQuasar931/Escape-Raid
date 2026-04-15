@@ -191,6 +191,29 @@
     window.dispatchEvent(new Event("gmsoftSdkReady"));
   }
 
+  function keepUnlocked(gameMeta, promotion) {
+    if (window.__gmsoftEscapeRaidUnlockInterval) {
+      clearInterval(window.__gmsoftEscapeRaidUnlockInterval);
+    }
+    window.__gmsoftEscapeRaidUnlockInterval = setInterval(function() {
+      if (!window.GMSOFT_OPTIONS) {
+        window.GMSOFT_OPTIONS = {};
+      }
+      window.GMSOFT_OPTIONS.allow_play = "yes";
+      window.GMSOFT_OPTIONS.allow_host = "yes";
+      window.GMSOFT_OPTIONS.allow_embed = "yes";
+      window.GMSOFT_OPTIONS.sdkType = "gm";
+      window.GMSOFT_OPTIONS.game = gameMeta;
+      window.GMSOFT_OPTIONS.promotion = promotion;
+      window.GMSOFT_SDKTYPE = "gm";
+      window.sdkType = "gm";
+      if (!window.GmSoft) {
+        window.GmSoft = {};
+      }
+      window.GmSoft.allow_play = "yes";
+    }, 250);
+  }
+
   function applyResponse(responseBody, signedToken, gameInfoParam, adInfoParam) {
     const regisinfo = responseBody.regisinfo || {};
     const gameinfo = responseBody.gameinfo || {};
@@ -198,6 +221,13 @@
     const adsinfo = responseBody.adsinfo || {};
     const signed = regisinfo.signed || signedToken;
     const body = safeJson(responseBody);
+    const existingOptions = window.GMSOFT_OPTIONS || {};
+    const gameMeta = responseBody.game || gameinfo.game || {
+      name: regisinfo.name || existingOptions.productName || "Escape Raid",
+      description: regisinfo.description || "",
+      image: regisinfo.image || "loading.png",
+      redirect_url: regisinfo.redirect_url || ""
+    };
 
     window.__gmsoftEscapeRaidResponseBody = responseBody;
     window.GMSOFT_SDKTYPE = "gm";
@@ -226,13 +256,45 @@
       enable_preroll: adsinfo.enable_preroll || "no"
     };
 
+    window.GMSOFT_OPTIONS = Object.assign({}, existingOptions, {
+      enableAds: false,
+      debug: false,
+      pub_id: adsinfo.pubid || existingOptions.pub_id || "",
+      unlockTimer: Number(regisinfo.unlock_timer || existingOptions.unlockTimer || 0),
+      timeShowInter: Number(adsinfo.time_show_inter || existingOptions.timeShowInter || 60),
+      timeShowReward: Number(adsinfo.time_show_reward || existingOptions.timeShowReward || 60),
+      domainHost: window.location.hostname,
+      sdkversion: existingOptions.sdkversion || 5,
+      adsDebug: false,
+      game: gameMeta,
+      promotion: promotion,
+      allow_play: "yes",
+      allow_host: "yes",
+      allow_embed: "yes",
+      enablePreroll: "no",
+      sdkType: "gm",
+      hostindex: 0,
+      gdHost: false
+    });
+
+    window.GMSOFT_OPTIONS.allow_play = "yes";
+    window.GMSOFT_OPTIONS.allow_host = "yes";
+    window.GMSOFT_OPTIONS.allow_embed = "yes";
+    window.GMSOFT_OPTIONS.game = gameMeta;
+    window.GMSOFT_OPTIONS.promotion = promotion;
+    window.GMSOFT_OPTIONS.sdkType = "gm";
+
     try {
       localStorage.setItem("gmsdksigndomain", signed);
       localStorage.setItem("gm_game_info", body);
       localStorage.setItem("gameInfoResponse", body);
       localStorage.setItem("gm_game_info_param", gameInfoParam);
       localStorage.setItem("gm_ad_info_param", adInfoParam);
+      localStorage.setItem("gmsoft_options", safeJson(window.GMSOFT_OPTIONS));
+      localStorage.setItem("gmsoft_game", safeJson(gameMeta));
     } catch (error) {}
+
+    keepUnlocked(gameMeta, promotion);
   }
 
   function buildVerifyUrl(urlRequest, gameId) {
@@ -277,6 +339,25 @@
       } catch (error) {
         applyResponse(options.responseBody || {}, signedToken, gameInfoParam, adInfoParam);
       }
+
+      window.GmSoft = window.GmSoft || {};
+      window.GmSoft.Init = window.GmSoft.Init || function() {
+        return true;
+      };
+      window.GmSoft.Ready = window.GmSoft.Ready || function() {
+        return true;
+      };
+      window.GmSoft.SetParam = window.GmSoft.SetParam || function() {
+        window.GMSOFT_OPTIONS.allow_play = "yes";
+        return true;
+      };
+      window.GmSoft.GetParam = window.GmSoft.GetParam || function(key) {
+        if (key === "allow_play") {
+          return "yes";
+        }
+        return "";
+      };
+      window.SetParam = window.SetParam || window.GmSoft.SetParam;
 
       dispatchReady();
     }
