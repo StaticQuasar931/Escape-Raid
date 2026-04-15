@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Escape Raid</title>
   <meta name="description" content="Escape Raid WebGL build">
+  <link rel="icon" href="logo.png">
   <style>
     :root {
       color-scheme: dark;
@@ -181,6 +182,13 @@
       width: calc(100% - 32px);
       transform: translateX(-50%);
     }
+
+    .codex-hidden-lock-overlay {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+    }
   </style>
 </head>
 <body>
@@ -356,13 +364,6 @@
         }
       };
 
-      window.__gmsoftEscapeRaid.init({
-        signedDomainToken: signedDomainToken,
-        gameInfoParam: unityGameInfoParam,
-        adInfoParam: unityAdInfoParam,
-        responseBody: unlockedGameInfoResponse
-      });
-
       const config = {
         dataUrl: remoteDataUrl,
         frameworkUrl: localBuildUrl + "/escape-raid-v" + productVersion + ".framework.js.unityweb",
@@ -371,6 +372,7 @@
         companyName: "Escape Raid",
         productName: "Escape Raid",
         productVersion: productVersion,
+        gameId: "escape-raid",
         autoSyncPersistentDataPath: true,
         showBanner: function(message, type) {
           const warning = document.getElementById("unity-warning");
@@ -385,6 +387,15 @@
           }
         }
       };
+
+      window.__gmsoftEscapeRaid.init({
+        signedDomainToken: signedDomainToken,
+        gameInfoParam: unityGameInfoParam,
+        adInfoParam: unityAdInfoParam,
+        responseBody: unlockedGameInfoResponse,
+        config: config,
+        urlRequest: "https://api.azgame.io/sdk/gmadsv1"
+      });
 
       const localRequiredFiles = [
         loaderUrl,
@@ -417,12 +428,8 @@
         }
       }
 
-      function isLocalHost() {
-        return location.hostname === "localhost" || location.hostname === "127.0.0.1";
-      }
-
       async function configureDataUrl() {
-        if (isLocalHost() && await fileExists(localDataUrl)) {
+        if (await fileExists(localDataUrl)) {
           config.dataUrl = localDataUrl;
           return "local";
         }
@@ -441,7 +448,65 @@
         });
       }
 
+      function hideOverlayNode(node) {
+        if (!node || !node.classList) {
+          return;
+        }
+        node.classList.add("codex-hidden-lock-overlay");
+        node.setAttribute("aria-hidden", "true");
+      }
+
+      function looksLikeLockCopy(text) {
+        const value = (text || "").replace(/\s+/g, " ").trim().toLowerCase();
+        if (!value) {
+          return false;
+        }
+        return value.includes("locked") ||
+          value.includes("unlock") ||
+          value.includes("not available on this site") ||
+          value.includes("play on") ||
+          value.includes("open on") ||
+          value.includes("continue on") ||
+          value.includes("this game is not available");
+      }
+
+      function isLargeOverlayElement(node) {
+        if (!(node instanceof HTMLElement)) {
+          return false;
+        }
+        const style = window.getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        const wideEnough = rect.width >= window.innerWidth * 0.35;
+        const tallEnough = rect.height >= window.innerHeight * 0.18;
+        const positioned = style.position === "fixed" || style.position === "absolute" || style.position === "sticky";
+        const elevated = Number(style.zIndex || "0") >= 10 || style.position === "fixed";
+        return wideEnough && tallEnough && positioned && elevated;
+      }
+
+      function removeInjectedIframes() {
+        const frames = document.querySelectorAll("iframe");
+        frames.forEach(function(frame) {
+          const src = (frame.getAttribute("src") || "").toLowerCase();
+          if (!src) {
+            return;
+          }
+          if (
+            src.includes("azgame.io") ||
+            src.includes("cdnwave.com") ||
+            src.includes("gmadsv1") ||
+            src.includes("googlesyndication") ||
+            src.includes("doubleclick")
+          ) {
+            hideOverlayNode(frame);
+            if (frame.parentElement && isLargeOverlayElement(frame.parentElement)) {
+              hideOverlayNode(frame.parentElement);
+            }
+          }
+        });
+      }
+
       function removeLockOverlay() {
+        removeInjectedIframes();
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
         let node;
         while ((node = walker.nextNode())) {
@@ -449,9 +514,16 @@
           if (!text) {
             continue;
           }
-          if (text === "Escape Raid is locked." || text === "Escape Raid is locked") {
-            node.style.display = "none";
-            node.setAttribute("aria-hidden", "true");
+          if (looksLikeLockCopy(text)) {
+            if (isLargeOverlayElement(node)) {
+              hideOverlayNode(node);
+            }
+            if (node.parentElement && isLargeOverlayElement(node.parentElement)) {
+              hideOverlayNode(node.parentElement);
+            }
+            if (node.parentElement && node.parentElement.parentElement && isLargeOverlayElement(node.parentElement.parentElement)) {
+              hideOverlayNode(node.parentElement.parentElement);
+            }
           }
         }
       }
