@@ -408,15 +408,46 @@
       };
       window.config = config;
       window.GMSOFT_OPTIONS = config;
-
-      window.__gmsoftEscapeRaid.init({
+      window.__ESCAPE_RAID_GMSOFT_INPUT = {
         signedDomainToken: signedDomainToken,
         gameInfoParam: unityGameInfoParam,
         adInfoParam: unityAdInfoParam,
         responseBody: unlockedGameInfoResponse,
         config: config,
-        urlRequest: "https://api.azgame.io/sdk/gmadsv1"
-      });
+        gameInfoObject: unityGameInfoObject,
+        adInfoObject: unityAdInfoObject,
+        siteInfo: {
+          enable_ads: "no",
+          hostindex: 0,
+          adsDebug: "no",
+          debug_mode: "no",
+          promotion: {
+            enable: "no",
+            call_to_action: "no",
+            promotion_list: []
+          },
+          unlock_timer: 0,
+          unlock_time: 0,
+          enablePreroll: "no",
+          pub_id: "",
+          timeShowInter: 60,
+          timeShowReward: 60,
+          sdkType: "gm",
+          allow_embed: "yes",
+          allow_host: "yes",
+          allow_play: "yes",
+          allowLocalHost: true,
+          game: {
+            name: "Escape Raid",
+            description: "",
+            image: "loading.png",
+            redirect_url: ""
+          }
+        }
+      };
+      if (typeof window.__gmsoftBootstrap === "function") {
+        window.__gmsoftBootstrap();
+      }
 
       const localRequiredFiles = [
         loaderUrl,
@@ -424,6 +455,7 @@
         config.codeUrl,
         "loading.png",
         "logo.png",
+        "lib/infov3.json",
         "StreamingAssets/UnityServicesProjectConfiguration.json"
       ];
 

@@ -1,0 +1,28 @@
+{
+  "enable_ads": "no",
+  "hostindex": 0,
+  "adsDebug": "no",
+  "debug_mode": "no",
+  "promotion": {
+    "enable": "no",
+    "call_to_action": "no",
+    "promotion_list": []
+  },
+  "unlock_timer": 0,
+  "unlock_time": 0,
+  "enablePreroll": "no",
+  "pub_id": "",
+  "timeShowInter": 60,
+  "timeShowReward": 60,
+  "sdkType": "gm",
+  "allow_embed": "yes",
+  "allow_host": "yes",
+  "allow_play": "yes",
+  "allowLocalHost": true,
+  "game": {
+    "name": "Escape Raid",
+    "description": "",
+    "image": "loading.png",
+    "redirect_url": ""
+  }
+}
