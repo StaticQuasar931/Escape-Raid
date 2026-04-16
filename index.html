@@ -225,9 +225,10 @@
       const productVersion = "25091906";
       const localBuildUrl = "Build";
       const remoteBuildUrl = "https://games.azgame.io/game/escape-raid/25091906/Build";
-      const localDataUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb";
-      const remoteDataUrl = remoteBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb";
-      const loaderUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".loader.js";
+      const cacheBust = "?v=" + productVersion + "-restore1";
+      const localDataUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb" + cacheBust;
+      const remoteDataUrl = remoteBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb" + cacheBust;
+      const loaderUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".loader.js" + cacheBust;
       const signedDomainToken = "eyJzaWduZWQiOiJJaHQ2XC9qdTRUWk15dTljNUhNbWNmekM2QWFmdXFIbGlqOFNcL1ZNNGJxOFVERXZ2czBwc3gwZUZQNEdWSkVWNmVFU2FMaGV1UERNMnEwOVVhUFRLODFJbVpVYnBpTndMXC9wNENcL2R2RWRkanlQK1RyUFFqazNLOUxOM0ZNRDluN0hSXC9ZblAxRmJYTkxoOG0zY3ZLT1JjaWdyXC9Na1JJQnV4SndQaWlvTlFMTVVPbkIzUmZUUkV1czBXbThJK3l4WEdzWUttSVhrT1lGT2hMXC8xb29NNG1hYWswMHZCaFwvZ2J1T09DRDBmZE82K2k3WVFuQUpvQUlBVTNtVXZUc0g4bWN3XC9qUmtTc3E5a2hWdktWVStnem4rZndveVpKWDFWTE00alwvUzZWdVF5SGJoSWEzM0d6U2hjUDZYQXpUUTBIOWpsc2pzNU83aEx4alVkUlcrSDFsZW9RPT0iLCJhcCI6InllcyIsImhuIjoiZ2FtZS5hemdhbWUuaW8iLCJkb21haW4iOiJhemdhbWUuaW8iLCJzIjoieWVzIiwic3R5cGUiOjJ9";
 
       function encodeBase64(value) {
@@ -385,8 +386,8 @@
 
       const config = {
         dataUrl: remoteDataUrl,
-        frameworkUrl: localBuildUrl + "/escape-raid-v" + productVersion + ".framework.js.unityweb",
-        codeUrl: localBuildUrl + "/escape-raid-v" + productVersion + ".wasm.unityweb",
+        frameworkUrl: localBuildUrl + "/escape-raid-v" + productVersion + ".framework.js.unityweb" + cacheBust,
+        codeUrl: localBuildUrl + "/escape-raid-v" + productVersion + ".wasm.unityweb" + cacheBust,
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Escape Raid",
         productName: "Escape Raid",
@@ -517,24 +518,7 @@
         node.setAttribute("aria-hidden", "true");
       }
 
-      function debugLockNode(node, text) {
-        if (!(node instanceof HTMLElement)) {
-          return;
-        }
-        if (node.dataset && node.dataset.codexLockLogged === "yes") {
-          return;
-        }
-        if (node.dataset) {
-          node.dataset.codexLockLogged = "yes";
-        }
-        console.log("[Codex lock debug]", {
-          tag: node.tagName,
-          id: node.id || "",
-          className: typeof node.className === "string" ? node.className : "",
-          text: (text || "").trim(),
-          outerHTML: (node.outerHTML || "").slice(0, 800)
-        });
-      }
+      function debugLockNode() {}
 
       function looksLikeLockCopy(text) {
         const value = (text || "").replace(/\s+/g, " ").trim().toLowerCase();
