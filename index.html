@@ -648,6 +648,47 @@
         window.addEventListener("touchstart", activate, { passive: true });
       }
 
+      function tryUnityMessage(objectName, methodName, value) {
+        const instance = window.unityInstance;
+        if (!instance || typeof instance.SendMessage !== "function") {
+          return false;
+        }
+        try {
+          if (typeof value === "undefined") {
+            instance.SendMessage(objectName, methodName);
+          } else {
+            instance.SendMessage(objectName, methodName, value);
+          }
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function scheduleUnityStateNudge() {
+        const calls = [
+          ["GameUIControl", "SetReady"],
+          ["GameUIControl", "ShowStartGame"],
+          ["GameUIControl", "ShowOnGame"],
+          ["GameUIControl", "HideAll"],
+          ["FixStartGame", "Start1"],
+          ["FixStartGame", "DelayedStart"],
+          ["UI Cam", "SetReady"],
+          ["UI Cam", "ShowStartGame"],
+          ["MainGUI", "SetReady"],
+          ["MainGUI", "ShowStartGame"]
+        ];
+
+        const delays = [200, 600, 1200, 2200, 4000];
+        delays.forEach(function(delay) {
+          setTimeout(function() {
+            calls.forEach(function(entry) {
+              tryUnityMessage(entry[0], entry[1]);
+            });
+          }, delay);
+        });
+      }
+
       async function bootGame() {
         loadingText.textContent = "Checking local files...";
         const missing = await verifyLocalFiles();
@@ -676,6 +717,7 @@
             canvas.focus();
             installInteractionHandlers();
             document.dispatchEvent(new CustomEvent("gmsoftSdkReady"));
+            scheduleUnityStateNudge();
           }).catch(function(message) {
             setFatalError(typeof message === "string" ? message : "Unity failed to start. Check the browser console for details.");
           });
