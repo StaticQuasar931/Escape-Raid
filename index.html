@@ -485,6 +485,25 @@
         node.setAttribute("aria-hidden", "true");
       }
 
+      function debugLockNode(node, text) {
+        if (!(node instanceof HTMLElement)) {
+          return;
+        }
+        if (node.dataset && node.dataset.codexLockLogged === "yes") {
+          return;
+        }
+        if (node.dataset) {
+          node.dataset.codexLockLogged = "yes";
+        }
+        console.log("[Codex lock debug]", {
+          tag: node.tagName,
+          id: node.id || "",
+          className: typeof node.className === "string" ? node.className : "",
+          text: (text || "").trim(),
+          outerHTML: (node.outerHTML || "").slice(0, 800)
+        });
+      }
+
       function looksLikeLockCopy(text) {
         const value = (text || "").replace(/\s+/g, " ").trim().toLowerCase();
         if (!value) {
@@ -544,12 +563,14 @@
             continue;
           }
           if (looksLikeLockCopy(text)) {
+            debugLockNode(node, text);
             hideLockTextNode(node);
 
             let current = node;
             let depth = 0;
             while (current && depth < 6) {
               if (current instanceof HTMLElement) {
+                debugLockNode(current, text);
                 if (depth === 0 || isLargeOverlayElement(current)) {
                   hideOverlayNode(current);
                 }
