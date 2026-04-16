@@ -196,6 +196,10 @@
       background: transparent !important;
       border-color: transparent !important;
     }
+
+    .codex-disable-pointer {
+      pointer-events: none !important;
+    }
   </style>
 </head>
 <body>
@@ -623,6 +627,96 @@
         window.setInterval(removeLockOverlay, 200);
       }
 
+      function isProtectedElement(node) {
+        return node === document.documentElement ||
+          node === document.body ||
+          node === container ||
+          node === canvas ||
+          node === loadingBar ||
+          node === errorPanel ||
+          node === document.getElementById("unity-warning") ||
+          container.contains(node);
+      }
+
+      function disablePointerBlockingOverlays() {
+        container.style.pointerEvents = "auto";
+        canvas.style.pointerEvents = "auto";
+        canvas.style.position = "relative";
+        canvas.style.zIndex = "2";
+
+        const allNodes = document.body.querySelectorAll("*");
+        allNodes.forEach(function(node) {
+          if (!(node instanceof HTMLElement)) {
+            return;
+          }
+          if (isProtectedElement(node)) {
+            return;
+          }
+          const style = window.getComputedStyle(node);
+          const rect = node.getBoundingClientRect();
+          const isOverlayLike =
+            (style.position === "fixed" || style.position === "absolute" || style.position === "sticky") &&
+            rect.width >= window.innerWidth * 0.15 &&
+            rect.height >= window.innerHeight * 0.08;
+
+          if (isOverlayLike || looksLikeLockCopy(node.textContent || "")) {
+            node.classList.add("codex-disable-pointer");
+            if (style.zIndex !== "auto") {
+              node.style.zIndex = "1";
+            }
+          }
+        });
+      }
+
+      function forwardPointerToCanvas(sourceEvent) {
+        if (!window.unityInstance) {
+          return;
+        }
+        if (sourceEvent.target === canvas) {
+          return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        const insideCanvas = sourceEvent.clientX >= rect.left &&
+          sourceEvent.clientX <= rect.right &&
+          sourceEvent.clientY >= rect.top &&
+          sourceEvent.clientY <= rect.bottom;
+
+        if (!insideCanvas) {
+          return;
+        }
+
+        disablePointerBlockingOverlays();
+
+        try {
+          const forwarded = new MouseEvent(sourceEvent.type, {
+            bubbles: true,
+            cancelable: true,
+            clientX: sourceEvent.clientX,
+            clientY: sourceEvent.clientY,
+            screenX: sourceEvent.screenX,
+            screenY: sourceEvent.screenY,
+            button: sourceEvent.button,
+            buttons: sourceEvent.buttons,
+            ctrlKey: sourceEvent.ctrlKey,
+            shiftKey: sourceEvent.shiftKey,
+            altKey: sourceEvent.altKey,
+            metaKey: sourceEvent.metaKey
+          });
+          canvas.dispatchEvent(forwarded);
+        } catch (error) {}
+      }
+
+      function installCanvasPriorityMode() {
+        const forwardedTypes = ["pointerdown", "mousedown", "mouseup", "click", "touchstart"];
+        forwardedTypes.forEach(function(eventType) {
+          document.addEventListener(eventType, function(event) {
+            forwardPointerToCanvas(event);
+          }, true);
+        });
+
+        window.setInterval(disablePointerBlockingOverlays, 300);
+      }
+
       function requestFullscreen(event) {
         if (document.fullscreenElement) {
           return;
@@ -727,6 +821,8 @@
             loadingBar.style.display = "none";
             canvas.focus();
             installInteractionHandlers();
+            installCanvasPriorityMode();
+            disablePointerBlockingOverlays();
             document.dispatchEvent(new CustomEvent("gmsoftSdkReady"));
             scheduleUnityStateNudge();
           }).catch(function(message) {
