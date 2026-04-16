@@ -229,7 +229,7 @@
       const localDataUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb" + cacheBust;
       const remoteDataUrl = remoteBuildUrl + "/escape-raid-v" + productVersion + ".data.unityweb" + cacheBust;
       const loaderUrl = localBuildUrl + "/escape-raid-v" + productVersion + ".loader.js" + cacheBust;
-      const signedDomainToken = "eyJzaWduZWQiOiJJaHQ2XC9qdTRUWk15dTljNUhNbWNmekM2QWFmdXFIbGlqOFNcL1ZNNGJxOFVERXZ2czBwc3gwZUZQNEdWSkVWNmVFU2FMaGV1UERNMnEwOVVhUFRLODFJbVpVYnBpTndMXC9wNENcL2R2RWRkanlQK1RyUFFqazNLOUxOM0ZNRDluN0hSXC9ZblAxRmJYTkxoOG0zY3ZLT1JjaWdyXC9Na1JJQnV4SndQaWlvTlFMTVVPbkIzUmZUUkV1czBXbThJK3l4WEdzWUttSVhrT1lGT2hMXC8xb29NNG1hYWswMHZCaFwvZ2J1T09DRDBmZE82K2k3WVFuQUpvQUlBVTNtVXZUc0g4bWN3XC9qUmtTc3E5a2hWdktWVStnem4rZndveVpKWDFWTE00alwvUzZWdVF5SGJoSWEzM0d6U2hjUDZYQXpUUTBIOWpsc2pzNU83aEx4alVkUlcrSDFsZW9RPT0iLCJhcCI6InllcyIsImhuIjoiZ2FtZS5hemdhbWUuaW8iLCJkb21haW4iOiJhemdhbWUuaW8iLCJzIjoieWVzIiwic3R5cGUiOjJ9";
+      const originalSignedDomainToken = "eyJzaWduZWQiOiJJaHQ2XC9qdTRUWk15dTljNUhNbWNmekM2QWFmdXFIbGlqOFNcL1ZNNGJxOFVERXZ2czBwc3gwZUZQNEdWSkVWNmVFU2FMaGV1UERNMnEwOVVhUFRLODFJbVpVYnBpTndMXC9wNENcL2R2RWRkanlQK1RyUFFqazNLOUxOM0ZNRDluN0hSXC9ZblAxRmJYTkxoOG0zY3ZLT1JjaWdyXC9Na1JJQnV4SndQaWlvTlFMTVVPbkIzUmZUUkV1czBXbThJK3l4WEdzWUttSVhrT1lGT2hMXC8xb29NNG1hYWswMHZCaFwvZ2J1T09DRDBmZE82K2k3WVFuQUpvQUlBVTNtVXZUc0g4bWN3XC9qUmtTc3E5a2hWdktWVStnem4rZndveVpKWDFWTE00alwvUzZWdVF5SGJoSWEzM0d6U2hjUDZYQXpUUTBIOWpsc2pzNU83aEx4alVkUlcrSDFsZW9RPT0iLCJhcCI6InllcyIsImhuIjoiZ2FtZS5hemdhbWUuaW8iLCJkb21haW4iOiJhemdhbWUuaW8iLCJzIjoieWVzIiwic3R5cGUiOjJ9";
 
       function encodeBase64(value) {
         return btoa(unescape(encodeURIComponent(value)));
@@ -243,6 +243,17 @@
         }
       }
 
+      function createHostSignedToken() {
+        const data = decodeBase64Json(originalSignedDomainToken) || {};
+        data.hn = location.hostname;
+        data.domain = location.hostname;
+        data.ap = "yes";
+        data.s = "yes";
+        data.style = typeof data.style === "number" ? data.style : 2;
+        return encodeBase64(JSON.stringify(data));
+      }
+
+      const signedDomainToken = createHostSignedToken();
       const signedDomainData = decodeBase64Json(signedDomainToken) || {};
       const verifiedSignature = signedDomainData.signed || "";
       const allowedHosts = Array.from(new Set([

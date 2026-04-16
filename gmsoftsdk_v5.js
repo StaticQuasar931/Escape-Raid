@@ -389,8 +389,23 @@
 
     var gameInfo = {
       sdktype: "gm",
+      sdk_type: "gm",
+      allow_play: "yes",
+      allow_host: "yes",
+      allow_embed: "yes",
+      hosted: "yes",
       more_games_url: "",
-      promotion: siteInfo.promotion || {}
+      promotion: siteInfo.promotion || {},
+      veryfiedDomainData: {
+        whiteListDomain: allowList,
+        veryfiedSignature: verifiedSignature,
+        domain: hostName,
+        host: hostName
+      },
+      whiteListDomain: allowList,
+      veryfiedSignature: verifiedSignature,
+      domain: hostName,
+      host: hostName
     };
 
     var adsInfo = {
@@ -512,6 +527,8 @@
       localStorage.setItem("gmsoft_options", safeJsonStringify(window.GMSOFT_OPTIONS));
       localStorage.setItem("gmsoft_game", safeJsonStringify(siteInfo.game || {}));
       localStorage.setItem("gmsdk_site_info", safeJsonStringify(siteInfo));
+      localStorage.setItem("GMSOFT_GAME_INFO", safeJsonStringify(gameInfo));
+      localStorage.setItem("GMSOFT_ADS_INFO", safeJsonStringify(adsInfo));
     } catch (error) {}
 
     installNetworkShim(function() {
